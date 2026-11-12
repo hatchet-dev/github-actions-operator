@@ -1,0 +1,26 @@
+{
+  "name": "github-actions-operator",
+  "private": true,
+  "type": "module",
+  "description": "Run GitHub Actions jobs in Hatchet sandboxes from a Hatchet serverless endpoint",
+  "license": "MIT",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail --format pretty",
+    "typecheck": "tsc --noEmit",
+    "setup": "node --env-file=.dev.vars scripts/setup.ts"
+  },
+  "dependencies": {
+    "@hatchet-dev/sandbox": "^0.1.5",
+    "@hatchet-dev/serverless": "^0.2.0",
+    "@hatchet-dev/typescript-sdk": "^1.46.2",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261110.1",
+    "@types/node": "^24.0.0",
+    "typescript": "^5.6.0",
+    "wrangler": "^4.160.1"
+  }
+}
