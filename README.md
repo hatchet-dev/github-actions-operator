@@ -45,8 +45,10 @@ pnpm setup
 Create a GitHub App under your account or organization at `Settings` > `Developer settings` > `GitHub Apps` > `New GitHub App`.
 
 - Webhook. Active, with the URL and secret from step 1.
-- Repository permissions. `Administration` read and write.
-- Subscribe to events. `Workflow jobs`.
+- Repository permissions. `Actions` read-only and `Administration` read and write. Nothing else.
+- Subscribe to events. `Workflow jobs`. The checkbox appears once `Actions` is granted.
+- Where can this GitHub App be installed. Only on this account, unless others should install it too.
+- Leave `Request user authorization (OAuth) during installation` off. The App needs no callback URL.
 
 Create it, note the App ID, generate a private key and download the `.pem`. Then install the App on the repositories that should run on Hatchet.
 

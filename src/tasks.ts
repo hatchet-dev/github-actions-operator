@@ -1,5 +1,6 @@
 import { env } from 'cloudflare:workers';
 import { hatchet, NonRetryableError, type JsonObject } from '@hatchet-dev/serverless';
+import { commandOutput, turnResult, type TurnInput } from '@hatchet-dev/sandbox/wire';
 import { Or, durationToMs, type Duration } from '@hatchet-dev/typescript-sdk/edge';
 import { z } from 'zod';
 
@@ -35,17 +36,6 @@ const jobEvent = z.object({
 });
 
 type JobEvent = z.infer<typeof jobEvent>;
-
-type Turn = {
-  fn: string;
-  input?: JsonObject;
-  image?: string;
-  idleTtlMs?: number;
-  metadata?: Record<string, string>;
-  resources?: { vcpu?: number; memoryMib?: number };
-};
-
-type TurnResult = { sandboxId: string; output?: { stdout?: string; exitCode?: number } };
 
 const int = (v?: string) => (v ? Number.parseInt(v, 10) : undefined);
 
@@ -153,11 +143,12 @@ export const runJob = hatchet.durableTask({
       labels: job.labels,
     });
     const sandboxId = `gha-${job.id}`;
-    const turn = async (t: Turn) => {
-      const r = await ctx.spawnChild<JsonObject, Record<string, TurnResult>>(SANDBOX, { ...t, sandboxId } as JsonObject);
-      return (r[SANDBOX] ?? r) as TurnResult;
+    const turn = async (t: Omit<TurnInput, 'sandboxId'>) => {
+      const r = await ctx.spawnChild<JsonObject, JsonObject>(SANDBOX, { ...t, sandboxId } as JsonObject);
+      return turnResult.parse(r[SANDBOX] ?? r);
     };
-    const command = (cmd: string, timeoutMs: number) => turn({ fn: '$command', input: { cmd, timeoutMs } });
+    const command = async (cmd: string, timeoutMs: number) =>
+      commandOutput.parse((await turn({ fn: '$command', input: { cmd, timeoutMs } })).output);
 
     const vcpu = int(env.SANDBOX_VCPU);
     const memoryMib = int(env.SANDBOX_MEMORY_MIB);
@@ -183,7 +174,7 @@ export const runJob = hatchet.durableTask({
         `command -v dockerd >/dev/null || exit 0; for i in $(seq 90); do docker info >/dev/null 2>&1 && exit 0; sleep 1; done; tail -50 /tmp/dockerd.log; exit 1`,
         120_000
       );
-      if (docker.output?.exitCode !== 0) throw new Error(`dockerd did not start\n${docker.output?.stdout ?? ''}`);
+      if (docker.exitCode !== 0) throw new Error(`dockerd did not start\n${docker.stdout}`);
 
       await command(
         `cd /home/runner && RUNNER_ALLOW_RUNASROOT=1 setsid sh -c './run.sh --jitconfig ${jitConfig} >/tmp/runner.log 2>&1; echo $? >/tmp/rc' & sleep 60`,
@@ -216,11 +207,11 @@ export const runJob = hatchet.durableTask({
           conclusion = `runner-exited-${rc}`;
           break;
         }
-        rc = (await command('cat /tmp/rc 2>/dev/null', 10_000)).output?.stdout?.trim() ?? '';
+        rc = (await command('cat /tmp/rc 2>/dev/null', 10_000)).stdout.trim();
       }
 
       const log = await command('tail -c 4000 /tmp/runner.log', 10_000);
-      return { job: job.html_url, conclusion, sandboxId, runnerLog: log.output?.stdout ?? '' };
+      return { job: job.html_url, conclusion, sandboxId, runnerLog: log.stdout };
     } finally {
       await turn({ fn: '$delete', input: {} });
     }
