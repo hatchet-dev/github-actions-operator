@@ -8,8 +8,5 @@ SANDBOX_TEMPLATE = "ghcr.io/actions/actions-runner:2.338.2"
 JOB_TIMEOUT = "6h"
 KEEPALIVE_INTERVAL = "5m"
 
-[limits]
-cpu_ms = 300000
-
 [observability]
 enabled = true
