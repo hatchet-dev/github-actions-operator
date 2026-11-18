@@ -7,6 +7,8 @@ RUNNER_LABEL = "hatchet"
 SANDBOX_TEMPLATE = "ghcr.io/actions/actions-runner:2.338.2"
 JOB_TIMEOUT = "6h"
 KEEPALIVE_INTERVAL = "5m"
+SANDBOX_VCPU = "2"
+SANDBOX_MEMORY_MIB = "4096"
 
 [observability]
 enabled = true
