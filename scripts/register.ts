@@ -9,6 +9,7 @@ import {
 
 const WEBHOOK = 'github-actions';
 const ENDPOINT = 'github-actions-operator';
+const EVENT_KEY = "'github:' + headers['x-github-event'] + (has(input.action) ? ':' + input.action : '')";
 
 const url = process.argv[2]?.replace(/\/$/, '');
 if (url && !process.env.HATCHET_SIGNING_SECRET) {
@@ -19,14 +20,17 @@ if (url && !process.env.HATCHET_SIGNING_SECRET) {
 const hatchet = HatchetClient.init();
 const tenant = hatchet.tenantId;
 
-const webhooks = await hatchet.webhooks.list({ webhookNames: [WEBHOOK] });
+const existing = (await hatchet.webhooks.list({ webhookNames: [WEBHOOK] })).rows?.[0];
 let secret = '(unchanged, set when the webhook was created)';
-if (!webhooks.rows?.length) {
+if (existing && existing.eventKeyExpression !== EVENT_KEY) {
+  await hatchet.webhooks.update(WEBHOOK, { eventKeyExpression: EVENT_KEY });
+}
+if (!existing) {
   secret = randomBytes(32).toString('hex');
   await hatchet.webhooks.create({
     name: WEBHOOK,
     sourceName: V1WebhookSourceName.GITHUB,
-    eventKeyExpression: "'github:' + headers['x-github-event'] + ':' + input.action",
+    eventKeyExpression: EVENT_KEY,
     auth: {
       algorithm: V1WebhookHMACAlgorithm.SHA256,
       encoding: V1WebhookHMACEncoding.HEX,
