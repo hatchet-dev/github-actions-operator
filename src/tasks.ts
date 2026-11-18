@@ -27,15 +27,25 @@ const GITHUB_DEFAULT_LABELS = ['self-hosted', 'linux', 'x64', 'X64'];
 const jobEvent = z.object({
   workflow_job: z.object({
     id: z.number(),
+    run_id: z.number(),
     name: z.string(),
+    workflow_name: z.string().nullable(),
     labels: z.array(z.string()),
     html_url: z.string(),
   }),
-  repository: z.object({ full_name: z.string() }),
+  repository: z.object({ full_name: z.string(), html_url: z.string() }),
   installation: z.object({ id: z.number() }),
 });
 
 type JobEvent = z.infer<typeof jobEvent>;
+
+const metadataFor = ({ workflow_job: job, repository }: JobEvent) => ({
+  'github.repo': repository.full_name,
+  'github.workflow': job.workflow_name ?? '',
+  'github.job': job.name,
+  'github.job_url': job.html_url,
+  'github.run_url': `${repository.html_url}/actions/runs/${job.run_id}`,
+});
 
 const int = (v?: string) => (v ? Number.parseInt(v, 10) : undefined);
 
@@ -123,28 +133,26 @@ export const mintJit = hatchet.task({
 
 export const runJob = hatchet.durableTask({
   name: 'github-actions-run-job',
-  onEvents: ['github:workflow_job:queued'],
   executionTimeout: '7h',
   fn: async (input: JobEvent, ctx) => {
-    const { workflow_job: job, repository, installation } = jobEvent.parse(input);
-    const label = env.RUNNER_LABEL ?? 'hatchet';
-    if (!job.labels.includes(label)) {
-      return { skipped: `labels [${job.labels.join(', ')}] do not include ${label}` };
-    }
+    const event = jobEvent.parse(input);
+    const { workflow_job: job, repository, installation } = event;
+    const additionalMetadata = metadataFor(event);
 
     const timeoutMs = durationToMs((env.JOB_TIMEOUT ?? '6h') as Duration);
     const intervalMs = durationToMs((env.KEEPALIVE_INTERVAL ?? '5m') as Duration);
     const since = await ctx.now();
     const deadline = since.getTime() + timeoutMs;
-    const { jitConfig } = await ctx.spawnChild(mintJit, {
-      installationId: installation.id,
-      repo: repository.full_name,
-      jobId: job.id,
-      labels: job.labels,
-    });
+    const { jitConfig } = await ctx.spawnChild(
+      mintJit,
+      { installationId: installation.id, repo: repository.full_name, jobId: job.id, labels: job.labels },
+      { additionalMetadata }
+    );
     const sandboxId = `gha-${job.id}`;
     const turn = async (t: Omit<TurnInput, 'sandboxId'>) => {
-      const r = await ctx.spawnChild<JsonObject, JsonObject>(SANDBOX, { ...t, sandboxId } as JsonObject);
+      const r = await ctx.spawnChild<JsonObject, JsonObject>(SANDBOX, { ...t, sandboxId } as JsonObject, {
+        additionalMetadata: { ...additionalMetadata, 'hatchet.sandbox.fn': t.fn, 'hatchet.sandbox.id': sandboxId },
+      });
       return turnResult.parse(r[SANDBOX] ?? r);
     };
     const command = async (cmd: string, timeoutMs: number) =>
@@ -218,4 +226,18 @@ export const runJob = hatchet.durableTask({
   },
 });
 
-export const workflows = [runJob, mintJit];
+export const onJob = hatchet.task({
+  name: 'github-actions-on-job',
+  onEvents: ['github:workflow_job:queued'],
+  fn: async (input: JobEvent, ctx) => {
+    const event = jobEvent.parse(input);
+    const label = env.RUNNER_LABEL ?? 'hatchet';
+    if (!event.workflow_job.labels.includes(label)) {
+      return { skipped: `labels [${event.workflow_job.labels.join(', ')}] do not include ${label}` };
+    }
+    await ctx.runNoWaitChild(runJob, input, { additionalMetadata: metadataFor(event) });
+    return { job: event.workflow_job.html_url };
+  },
+});
+
+export const workflows = [onJob, runJob, mintJit];

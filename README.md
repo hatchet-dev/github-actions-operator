@@ -7,11 +7,11 @@ Run your GitHub Actions jobs in [Hatchet](https://hatchet.run) sandboxes. Put `r
 ## How it works
 
 1. Your GitHub App sends a `workflow_job` webhook to a Hatchet incoming webhook.
-2. Hatchet turns the `queued` event into a run of the `github-actions-run-job` durable task on your Worker.
+2. Hatchet turns the `queued` event into a run of `github-actions-on-job` on your Worker. For a job with the `hatchet` label it starts the `github-actions-run-job` durable task, tagged with the repo, workflow, job and run URL.
 3. The task mints a just-in-time runner config with an installation token of your App, creates a sandbox from the official `actions/actions-runner` image, starts `dockerd`, and starts `run.sh --jitconfig`.
 4. The task sleeps until GitHub sends the matching `completed` event, checking every few minutes that the runner is still alive, then deletes the sandbox.
 
-GitHub keeps the logs and the status checks. Hatchet keeps a run per job with the sandbox turns as children.
+GitHub keeps the logs and the status checks. Hatchet keeps a run per job with the sandbox turns as children. Filter the runs list by the `github.repo` or `github.job` metadata to find a job, and follow `github.job_url` on the run to its GitHub page.
 
 ## Prerequisites
 
