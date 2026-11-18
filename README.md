@@ -37,7 +37,7 @@ cp .dev.vars.example .dev.vars
 Put your Hatchet token in `.dev.vars` and run the setup once. It creates the Hatchet webhook and prints the webhook URL and secret for the next step.
 
 ```sh
-pnpm setup
+pnpm register
 ```
 
 ### 2. GitHub App
@@ -72,7 +72,7 @@ pnpm deploy
 Fill in `HATCHET_SIGNING_SECRET` in `.dev.vars` and run the setup again with the Worker URL. It adds the serverless endpoint and leaves the webhook alone.
 
 ```sh
-pnpm setup https://github-actions-operator.<you>.workers.dev
+pnpm register https://github-actions-operator.<you>.workers.dev
 ```
 
 Then use the label in a workflow.
@@ -93,7 +93,7 @@ Secrets are Worker secrets. The rest have defaults under `[vars]` in `wrangler.t
 | Variable | Meaning |
 | --- | --- |
 | `HATCHET_CLIENT_TOKEN` | Your Hatchet API token. |
-| `HATCHET_SIGNING_SECRET` | 32+ characters. The endpoint's signing secret in Hatchet, set by `pnpm setup`. |
+| `HATCHET_SIGNING_SECRET` | 32+ characters. The endpoint's signing secret in Hatchet, set by `pnpm register`. |
 | `GITHUB_APP_ID` | The App ID from the App's settings page. |
 | `GITHUB_APP_PRIVATE_KEY` | The App's private key in PEM form. |
 | `RUNNER_LABEL` | Jobs whose labels do not include it are skipped. Default `hatchet`. |
@@ -116,4 +116,4 @@ The runner config request is a Hatchet task of its own with three retries and ba
 
 ## Local development
 
-`wrangler dev` serves the Worker on localhost. Hatchet only calls public HTTPS endpoints, so put a tunnel such as `cloudflared tunnel --url http://localhost:8787` in front and register that URL with `pnpm setup`.
+`wrangler dev` serves the Worker on localhost. Hatchet only calls public HTTPS endpoints, so put a tunnel such as `cloudflared tunnel --url http://localhost:8787` in front and register that URL with `pnpm register`.
