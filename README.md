@@ -1,6 +1,6 @@
 # github-actions-operator
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/hatchet-dev/github-actions-operator)
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/hatchet-dev/github-actions-operator) [![ci](https://github.com/hatchet-dev/github-actions-operator/actions/workflows/ci.yml/badge.svg)](https://github.com/hatchet-dev/github-actions-operator/actions/workflows/ci.yml)
 
 Run your GitHub Actions jobs in [Hatchet](https://hatchet.run) sandboxes. Put `runs-on: hatchet` in a workflow and every job gets a fresh sandbox, a just-in-time GitHub runner, and nothing to host. The control logic is a durable task on a Hatchet serverless endpoint deployed as a Cloudflare Worker.
 
@@ -12,6 +12,8 @@ Run your GitHub Actions jobs in [Hatchet](https://hatchet.run) sandboxes. Put `r
 4. The task sleeps until GitHub sends the matching `completed` event, checking every few minutes that the runner is still alive, then deletes the sandbox.
 
 GitHub keeps the logs and the status checks. Hatchet keeps a run per job with the sandbox turns as children. Filter the runs list by the `github.repo` or `github.job` metadata to find a job, and follow `github.job_url` on the run to its GitHub page.
+
+This repository's own [CI](https://github.com/hatchet-dev/github-actions-operator/actions/workflows/ci.yml) runs on the operator.
 
 ## Prerequisites
 

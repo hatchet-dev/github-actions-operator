@@ -2,6 +2,7 @@
   "name": "github-actions-operator",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@10.33.2",
   "description": "Run GitHub Actions jobs in Hatchet sandboxes from a Hatchet serverless endpoint",
   "license": "MIT",
   "scripts": {
