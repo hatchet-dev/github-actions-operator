@@ -175,12 +175,12 @@ export const runJob = hatchet.durableTask({
 
     try {
       await command(
-        `command -v dockerd >/dev/null || exit 0; [ "$(id -u)" = 0 ] && sudo= || sudo='sudo -n'; $sudo setsid sh -c 'dockerd --data-root /home/runner/.docker >/tmp/dockerd.log 2>&1' & sleep 60`,
+        `command -v dockerd >/dev/null || exit 0; [ "$(id -u)" = 0 ] && sudo= || sudo='sudo -n'; $sudo setsid sh -c 'command -v iptables >/dev/null || { apt-get update -q && apt-get install -y -q iptables; } >/tmp/apt.log 2>&1; exec dockerd --data-root /home/runner/.docker >/tmp/dockerd.log 2>&1' & sleep 60`,
         1000
       );
       const docker = await command(
-        `command -v dockerd >/dev/null || exit 0; for i in $(seq 90); do docker info >/dev/null 2>&1 && exit 0; sleep 1; done; tail -50 /tmp/dockerd.log; exit 1`,
-        120_000
+        `command -v dockerd >/dev/null || exit 0; for i in $(seq 120); do docker info >/dev/null 2>&1 && exit 0; sleep 1; done; tail -20 /tmp/apt.log 2>/dev/null; tail -30 /tmp/dockerd.log 2>/dev/null; exit 1`,
+        150_000
       );
       if (docker.exitCode !== 0) throw new Error(`dockerd did not start\n${docker.stdout}`);
 
