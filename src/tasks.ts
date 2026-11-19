@@ -175,7 +175,7 @@ export const runJob = hatchet.durableTask({
 
     try {
       await command(
-        `command -v dockerd >/dev/null || exit 0; sudo -n setsid sh -c 'dockerd --data-root /home/runner/.docker >/tmp/dockerd.log 2>&1' & sleep 60`,
+        `command -v dockerd >/dev/null || exit 0; [ "$(id -u)" = 0 ] && sudo= || sudo='sudo -n'; $sudo setsid sh -c 'dockerd --data-root /home/runner/.docker >/tmp/dockerd.log 2>&1' & sleep 60`,
         1000
       );
       const docker = await command(
