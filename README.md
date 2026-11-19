@@ -104,18 +104,3 @@ Secrets are Worker secrets. The rest have defaults under `[vars]` in `wrangler.t
 | `SANDBOX_VCPU`, `SANDBOX_MEMORY_MIB` | Sandbox size. Omit for the provider default. |
 | `JOB_TIMEOUT` | The sandbox is deleted after this even if GitHub never reports the job done. Default `6h`. |
 | `KEEPALIVE_INTERVAL` | How often the task checks that the runner is still alive. Keep it under the provider's max idle TTL, which defaults to 15 minutes. Default `5m`. |
-
-## Notes
-
-- The just-in-time config is passed to the sandbox as a command, so it is visible in the Hatchet dashboard as task input. It is single use, bound to one job, and useless once the runner has registered.
-- `dockerd` is started inside the sandbox before the runner, so `docker build`, `container:` jobs and Docker actions work. Jobs that call `systemctl` fail, there is no init system.
-- The runner runs as root inside the sandbox.
-- Runners are registered per repository on every repository the App is installed on. Installation tokens stay in the Worker.
-
-## When GitHub is down
-
-The runner config request is a Hatchet task of its own with three retries and backoff on network errors and 5xx responses. Every `KEEPALIVE_INTERVAL` the task checks whether the runner process has exited and ends the run with `runner-exited-<code>` if it has, so a runner that never reached GitHub costs one interval of sandbox time, not `JOB_TIMEOUT`. The sandbox is deleted on every path. A job left queued in GitHub is not retried from here. Re-run it in GitHub, or redeliver the webhook, and GitHub fails it on its own after 24 hours.
-
-## Local development
-
-`wrangler dev` serves the Worker on localhost. Hatchet only calls public HTTPS endpoints, so put a tunnel such as `cloudflared tunnel --url http://localhost:8787` in front and register that URL with `pnpm register`.
