@@ -1,7 +1,5 @@
 # github-actions-operator
 
-https://hatchet.run/v1/retry-policies?utm_source=github&utm_campaign=github-actions-operator&utm_content=readme&utm_medium=referral
-
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/hatchet-dev/github-actions-operator)
 
 Run your GitHub Actions jobs in [Hatchet](https://hatchet.run?utm_source=github&utm_campaign=github-actions-operator&utm_content=readme&utm_medium=referral) backed by [Sandboxes](https://docs.hatchet.run/v1/sandboxes?utm_source=github&utm_campaign=github-actions-operator&utm_content=readme&utm_medium=referral) and [Serverless Endpoints](https://docs.hatchet.run/v1/serverless?utm_source=github&utm_campaign=github-actions-operator&utm_content=readme&utm_medium=referral). Put `runs-on: hatchet` in a workflow and every job gets a fresh sandbox and a just-in-time GitHub runner. The control logic is a durable task on a Hatchet serverless endpoint deployed as a Cloudflare Worker.
