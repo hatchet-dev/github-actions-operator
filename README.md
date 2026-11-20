@@ -1,8 +1,10 @@
 # github-actions-operator
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/hatchet-dev/github-actions-operator) [![ci](https://github.com/hatchet-dev/github-actions-operator/actions/workflows/ci.yml/badge.svg)](https://github.com/hatchet-dev/github-actions-operator/actions/workflows/ci.yml)
+https://hatchet.run/v1/retry-policies?utm_source=github&utm_campaign=github-actions-operator&utm_content=readme&utm_medium=referral
 
-Run your GitHub Actions jobs in [Hatchet](https://hatchet.run) sandboxes. Put `runs-on: hatchet` in a workflow and every job gets a fresh sandbox, a just-in-time GitHub runner, and nothing to host. The control logic is a durable task on a Hatchet serverless endpoint deployed as a Cloudflare Worker.
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/hatchet-dev/github-actions-operator)
+
+Run your GitHub Actions jobs in [Hatchet](https://hatchet.run?utm_source=github&utm_campaign=github-actions-operator&utm_content=readme&utm_medium=referral) backed by [Sandboxes](https://docs.hatchet.run/v1/sandboxes?utm_source=github&utm_campaign=github-actions-operator&utm_content=readme&utm_medium=referral) and [Serverless Endpoints](https://docs.hatchet.run/v1/serverless?utm_source=github&utm_campaign=github-actions-operator&utm_content=readme&utm_medium=referral). Put `runs-on: hatchet` in a workflow and every job gets a fresh sandbox and a just-in-time GitHub runner. The control logic is a durable task on a Hatchet serverless endpoint deployed as a Cloudflare Worker.
 
 ## How it works
 
@@ -13,7 +15,7 @@ Run your GitHub Actions jobs in [Hatchet](https://hatchet.run) sandboxes. Put `r
 
 GitHub keeps the logs and the status checks. Hatchet keeps a run per job with the sandbox turns as children. Filter the runs list by the `github.repo` or `github.job` metadata to find a job, and follow `github.job_url` on the run to its GitHub page.
 
-This repository's own [CI](https://github.com/hatchet-dev/github-actions-operator/actions/workflows/ci.yml) runs on the operator.
+This repository has an [example](https://github.com/hatchet-dev/github-actions-operator/actions/workflows/ci.yml) GitHub Actions workflow that runs on the operator.
 
 ## Prerequisites
 
@@ -84,7 +86,7 @@ jobs:
   test:
     runs-on: hatchet
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: uname -a
 ```
 
